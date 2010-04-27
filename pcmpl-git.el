@@ -31,11 +31,37 @@
   :type 'file
   :group 'pcomplete)
 
+(defun pcmpl-git-parse-region (beg end regexp &optional predicate)
+  "Return a list of matches in region between BEG and END.
+See `pcmpl-git-parse' for the explanation of REGEXP, PREDICATE
+and the return value."
+  (let (collection)
+    (save-restriction
+      (narrow-to-region beg end)
+      (goto-char (point-min))
+      (while (re-search-forward regexp nil t)
+        (when (or (null predicate)
+                  (save-match-data (funcall predicate)))
+          (push (match-string 1) collection)))
+      collection)))
+
+(defun pcmpl-git-parse (cmd regexp &optional predicate &rest args)
+  "Parse the output of 'git CMD ARGS'.
+The return value is a list of match group 1 in REGEXP. PREDICATE
+is called when point is at the end of REGEXP."
+  (with-temp-buffer
+    (apply 'call-process pcmpl-git-executable nil t nil cmd args)
+    (pcmpl-git-parse-region (point-min) (point-max) regexp predicate)))
+
+(defvar pcmpl-git-commands
+  (lazy-completion-table pcmpl-git-commands pcmpl-git-commands)
+  "A collection of all 'git' commands.")
+
 (defun pcmpl-git-commands ()
   "Return a collection of all 'git' commands."
-  (let (beg end collection)
+  (let (beg end)
     (with-temp-buffer
-      (call-process pcmpl-git-executable nil t nil "--help" "--all")
+      (call-process pcmpl-git-executable nil t nil "help" "--all")
       (goto-char (point-min))
       (when (search-forward "----------------" nil t)
         (forward-line 1)
@@ -45,17 +71,120 @@
       (when (re-search-backward "^$" nil t)
         (setq end (point)))
       (when (and beg end)
-        (save-restriction
-          (narrow-to-region beg end)
-          (goto-char (point-min))
-          (while (re-search-forward "\\s-\\(\\S-+\\)\\s-" nil t)
-            (push (match-string 1) collection)))))
-    (nreverse collection)))
+        (pcomplete-uniqify-list
+         (pcmpl-git-parse-region beg end
+                                 "\\s-\\(\\S-+\\)\\s-"
+                                 (lambda ()
+                                   (not (string-match "--" (match-string 1))))))))))
+
+;;; an example output of 'git CMD -h'
+;; usage: git add [options] [--] <filepattern>...
+;;
+;;     -n, --dry-run         dry run
+;;     -v, --verbose         be verbose
+;;
+;;     -i, --interactive     interactive picking
+;;     -p, --patch           interactive patching
+;;     -e, --edit            edit current diff and apply
+;;     -f, --force           allow adding otherwise ignored files
+;;     -u, --update          update tracked files
+;;     -N, --intent-to-add   record only the fact that the path will be added later
+;;     -A, --all             add all, noticing removal of tracked files
+;;     --refresh             don't add, only refresh the index
+;;     --ignore-errors       just skip files which cannot be added because of errors
+;;; end
+
+(defvar pcmpl-git-cmd-option-exceptions
+  '("diff" "gui" "log" "rebase" "show")
+  "A list of git commands that can't be parsed automatically.")
+
+(defun pcmpl-git-short-options (cmd)
+  (unless (member cmd pcmpl-git-cmd-option-exceptions)
+    (let ((collection (pcmpl-git-parse cmd "\\_<-\\([a-zA-Z0-9]\\)\\(?:,\\|\\s-\\)"
+                                       (lambda ()
+                                         (< (- (match-beginning 1)
+                                               (line-beginning-position)) 25))
+                                       "-h")))
+      (mapconcat 'identity (pcomplete-uniqify-list collection) ""))))
+
+(defun pcmpl-git-long-options (cmd)
+  (if (member cmd pcmpl-git-cmd-option-exceptions)
+      (list "--help")
+    (pcomplete-uniqify-list
+     (cons "--help"
+           (pcmpl-git-parse cmd "\\_<\\(--[a-zA-Z0-9-]+\\)\\(?:,\\|\\s-\\)"
+                            (lambda ()
+                              (< (- (match-beginning 1)
+                                    (line-beginning-position)) 25))
+                            "-h")))))
+
+(defsubst pcmpl-git-branches ()
+  (pcomplete-uniqify-list
+   (pcmpl-git-parse "branch" "^\\*?\\s-+\\(\\S-+\\)\\(?:$\\|\\s-+\\)" nil "-a")))
+
+(defsubst pcmpl-git-tags ()
+  (pcomplete-uniqify-list
+   (pcmpl-git-parse "tag" "^\\(\\S-+\\)$" nil "-l")))
+
+;;; xxx: decide how to use this
+(defsubst pcmpl-git-rev-list ()
+  (pcmpl-git-parse "rev-list" "^\\(\\S-+\\)$" nil "--all" "--max-count=300"))
+
+(defsubst pcmpl-git-branches-or-tags ()
+  (append (pcmpl-git-branches) (pcmpl-git-tags)))
+
+;;; Copy from 'git help git' in 1.7.0.4
+(defvar pcmpl-git-toplevel-options
+  '("--version"
+    "--help"
+    "--exec-path"
+    "--html-path"
+    "-p"
+    "--paginate"
+    "--no-pager"
+    "--git-dir="
+    "--work-tree="                      ;xxx: pcomplete-suffix-list
+    "--bare"
+    "--no-replace-objects"))
 
 ;;;###autoload
 (defun pcomplete/git ()
   "Completion rules for the `git' command."
-  (pcomplete-here (pcmpl-git-commands)))
+  (let (cmd soptions loptions)
+    (while (pcomplete-match "^-" 0)
+      (pcomplete-here* pcmpl-git-toplevel-options))
+    (pcomplete-here* pcmpl-git-commands)
+    ;; `pcomplete-arg' seems broken; see bug #6027
+    (setq cmd (nth (1- pcomplete-index) pcomplete-args))
+    (setq soptions (pcmpl-git-short-options cmd)
+          loptions (pcmpl-git-long-options cmd))
+    (while (pcomplete-match "^-" 0)
+      (if (pcomplete-match "^-$" 0)
+          (pcomplete-opt soptions)
+        (pcomplete-here* loptions)))
+    (cond
+     ((string= cmd "add")
+      (while (pcomplete-here (pcomplete-dirs-or-entries))))
+     ((string= cmd "branch")
+      (pcomplete-here (pcmpl-git-branches)))
+     ((string= cmd "help")
+      (pcomplete-here pcmpl-git-commands))
+     ((string= cmd "init")
+      (pcomplete-here (pcomplete-dirs)))
+     ((string= cmd "log")
+      (pcomplete-here (pcomplete-entries)))
+     ((member cmd '("rm" "mv"))
+      (while (pcomplete-here (pcomplete-entries))))
+     ((string= cmd "rev-list")
+      (while (pcomplete-here (pcmpl-git-branches-or-tags))))
+     ((string= cmd "rebase")
+      (while (pcomplete-here (pcmpl-git-branches-or-tags))))
+     ((string= cmd "tag")
+      (if (try-completion (pcomplete-arg) (pcmpl-git-branches-or-tags))
+          (pcomplete-here (pcmpl-git-branches-or-tags))
+        (pcomplete-here (pcmpl-git-rev-list))))
+     (t
+      (while (pcomplete-here (pcomplete-entries)))))))
 
 (provide 'pcmpl-git)
 ;;; pcmpl-git.el ends here
