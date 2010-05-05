@@ -57,9 +57,23 @@ is called when point is at the end of REGEXP."
   (lazy-completion-table pcmpl-git-commands pcmpl-git-commands)
   "A collection of all 'git' commands.")
 
+;; (pcmpl-git-string-lessp "word" "word-")  ; => nil
+;; (pcmpl-git-string-lessp "words" "word-") ; => t
+(defun pcmpl-git-string-lessp (s1 s2)
+  "Compare strings S1 and S2 but treat '-' specially."
+  (let ((res (compare-strings s1 0 nil s2 0 nil))
+        c1 c2)
+    (if (eq res t) (setq res 0))
+    (ignore-errors
+      ;; the following setq could trigger errors
+      (setq c1 (aref s1 (1- (abs res)))
+            c2 (aref s2 (1- (abs res))))
+      (if (or (= c1 ?-) (= c2 ?-)) (setq res (- res))))
+    (if (> res 0) nil t)))
+
 (defun pcmpl-git-commands ()
   "Return a collection of all 'git' commands."
-  (let (beg end)
+  (let (beg end commands)
     (with-temp-buffer
       (call-process pcmpl-git-executable nil t nil "help" "--all")
       (goto-char (point-min))
@@ -71,11 +85,11 @@ is called when point is at the end of REGEXP."
       (when (re-search-backward "^$" nil t)
         (setq end (point)))
       (when (and beg end)
-        (pcomplete-uniqify-list
-         (pcmpl-git-parse-region beg end
-                                 "\\s-\\(\\S-+\\)\\s-"
-                                 (lambda ()
-                                   (not (string-match "--" (match-string 1))))))))))
+        (setq commands (pcmpl-git-parse-region beg end
+                                          "\\s-\\(\\S-+\\)\\s-"
+                                          (lambda ()
+                                            (not (string-match "--" (match-string 1))))))
+        (sort commands 'pcmpl-git-string-lessp)))))
 
 ;;; an example output of 'git CMD -h'
 ;; usage: git add [options] [--] <filepattern>...
