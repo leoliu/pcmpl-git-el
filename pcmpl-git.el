@@ -83,9 +83,6 @@ is called when point is at the end of REGEXP."
     (apply 'call-process pcmpl-git-executable nil t nil cmd args)
     (pcmpl-git-parse-region (point-min) (point-max) regexp predicate)))
 
-(defvar pcmpl-git-commands (pcmpl-git-commands)
-  "A collection of all 'git' commands.")
-
 ;; (pcmpl-git-string-lessp "word" "word-")  ; => nil
 ;; (pcmpl-git-string-lessp "words" "word-") ; => t
 (defun pcmpl-git-string-lessp (s1 s2)
@@ -121,6 +118,9 @@ If INTERNAL is non-nil, also include internal commands."
                         (unless internal
                           (lambda () (not (string-match "--" (match-string 1)))))))
         (sort commands 'pcmpl-git-string-lessp)))))
+
+(defvar pcmpl-git-commands (pcmpl-git-commands)
+  "A collection of all 'git' commands.")
 
 (defsubst pcmpl-git-branches ()
   (pcomplete-uniqify-list
