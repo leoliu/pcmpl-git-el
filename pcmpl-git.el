@@ -83,8 +83,7 @@ is called when point is at the end of REGEXP."
     (apply 'call-process pcmpl-git-executable nil t nil cmd args)
     (pcmpl-git-parse-region (point-min) (point-max) regexp predicate)))
 
-(defvar pcmpl-git-commands
-  (lazy-completion-table pcmpl-git-commands pcmpl-git-commands)
+(defvar pcmpl-git-commands (pcmpl-git-commands)
   "A collection of all 'git' commands.")
 
 ;; (pcmpl-git-string-lessp "word" "word-")  ; => nil
@@ -131,6 +130,10 @@ If INTERNAL is non-nil, also include internal commands."
   (pcomplete-uniqify-list
    (pcmpl-git-parse "tag" "^\\(\\S-+\\)$" nil "-l")))
 
+(defsubst pcmpl-git-aliases ()
+  (pcomplete-uniqify-list
+   (pcmpl-git-parse "config" "^alias\\.\\(\\S-+?\\) " nil "--get-regexp" "alias.*")))
+
 (defsubst pcmpl-git-rev-list ()
   (pcmpl-git-parse "rev-list" "^\\(\\S-+\\)$" nil "--all" "--abbrev-commit" "--max-count=300"))
 
@@ -162,7 +165,7 @@ If INTERNAL is non-nil, also include internal commands."
   (let (cmd soptions loptions)
     (while (pcomplete-match "^-" 0)
       (pcomplete-here* pcmpl-git-toplevel-options))
-    (pcomplete-here* pcmpl-git-commands)
+    (pcomplete-here* (append (pcmpl-git-aliases) pcmpl-git-commands))
     ;; `pcomplete-arg' seems broken; see bug #6027
     (setq cmd (nth (1- pcomplete-index) pcomplete-args))
     (setq soptions (pcmpl-git-short-options cmd)
