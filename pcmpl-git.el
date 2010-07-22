@@ -126,7 +126,7 @@ is called when point is at the end of REGEXP."
       (list "--help")
     (pcomplete-uniqify-list
      (cons "--help"
-           (pcmpl-git-parse cmd "\\_<\\(--[a-zA-Z0-9-]+\\)\\(?:,\\|\\s-\\)"
+           (pcmpl-git-parse cmd "\\_<\\(--[a-zA-Z0-9-]+\\)\\(?:,\\|\\s-\\|\\[\\)"
                             (lambda ()
                               (< (- (match-beginning 1)
                                     (line-beginning-position)) 25))
