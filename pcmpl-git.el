@@ -31,6 +31,32 @@
   :type 'file
   :group 'pcomplete)
 
+(defcustom pcmpl-git-options-file
+  (expand-file-name "git-options" data-directory)
+  "File containing a hashtable with git options."
+  :type 'file
+  :group 'pcomplete)
+
+(defvar pcmpl-git-hashtable nil
+  "Hashtable containing GIT options read from `pcmpl-git-options-file'.")
+
+(defvar pcmpl-git-config-varialbes nil
+  "A list containing git config variables.")
+
+(when (file-exists-p pcmpl-git-options-file)
+  (with-temp-buffer
+    (insert-file-contents pcmpl-git-options-file)
+    (setq pcmpl-git-hashtable (read (current-buffer)))
+    (setq pcmpl-git-config-varialbes (read (current-buffer)))))
+
+(defsubst pcmpl-git-short-options (cmd)
+  (when (hash-table-p pcmpl-git-hashtable)
+    (car (gethash cmd pcmpl-git-hashtable))))
+
+(defsubst pcmpl-git-long-options (cmd)
+  (when (hash-table-p pcmpl-git-hashtable)
+    (cadr (gethash cmd pcmpl-git-hashtable))))
+
 (defun pcmpl-git-parse-region (beg end regexp &optional predicate)
   "Return a list of matches in region between BEG and END.
 See `pcmpl-git-parse' for the explanation of REGEXP, PREDICATE
@@ -71,8 +97,9 @@ is called when point is at the end of REGEXP."
       (if (or (= c1 ?-) (= c2 ?-)) (setq res (- res))))
     (if (> res 0) nil t)))
 
-(defun pcmpl-git-commands ()
-  "Return a collection of all 'git' commands."
+(defun pcmpl-git-commands (&optional internal)
+  "Return a collection of all 'git' commands.
+If INTERNAL is non-nil, also include internal commands."
   (let (beg end commands)
     (with-temp-buffer
       (call-process pcmpl-git-executable nil t nil "help" "--all")
@@ -85,52 +112,12 @@ is called when point is at the end of REGEXP."
       (when (re-search-backward "^$" nil t)
         (setq end (point)))
       (when (and beg end)
-        (setq commands (pcmpl-git-parse-region beg end
-                                          "\\s-\\(\\S-+\\)\\s-"
-                                          (lambda ()
-                                            (not (string-match "--" (match-string 1))))))
+        (setq commands (pcmpl-git-parse-region
+                        beg end
+                        "\\s-\\(\\S-+\\)\\s-"
+                        (unless internal
+                          (lambda () (not (string-match "--" (match-string 1)))))))
         (sort commands 'pcmpl-git-string-lessp)))))
-
-;;; an example output of 'git CMD -h'
-;; usage: git add [options] [--] <filepattern>...
-;;
-;;     -n, --dry-run         dry run
-;;     -v, --verbose         be verbose
-;;
-;;     -i, --interactive     interactive picking
-;;     -p, --patch           interactive patching
-;;     -e, --edit            edit current diff and apply
-;;     -f, --force           allow adding otherwise ignored files
-;;     -u, --update          update tracked files
-;;     -N, --intent-to-add   record only the fact that the path will be added later
-;;     -A, --all             add all, noticing removal of tracked files
-;;     --refresh             don't add, only refresh the index
-;;     --ignore-errors       just skip files which cannot be added because of errors
-;;; end
-
-(defvar pcmpl-git-cmd-option-exceptions
-  '("diff" "gui" "log" "rebase" "show")
-  "A list of git commands that can't be parsed automatically.")
-
-(defun pcmpl-git-short-options (cmd)
-  (unless (member cmd pcmpl-git-cmd-option-exceptions)
-    (let ((collection (pcmpl-git-parse cmd "\\_<-\\([a-zA-Z0-9]\\)\\(?:,\\|\\s-\\)"
-                                       (lambda ()
-                                         (< (- (match-beginning 1)
-                                               (line-beginning-position)) 25))
-                                       "-h")))
-      (mapconcat 'identity (pcomplete-uniqify-list collection) ""))))
-
-(defun pcmpl-git-long-options (cmd)
-  (if (member cmd pcmpl-git-cmd-option-exceptions)
-      (list "--help")
-    (pcomplete-uniqify-list
-     (cons "--help"
-           (pcmpl-git-parse cmd "\\_<\\(--[a-zA-Z0-9-]+\\)\\(?:,\\|\\s-\\|\\[\\)"
-                            (lambda ()
-                              (< (- (match-beginning 1)
-                                    (line-beginning-position)) 25))
-                            "-h")))))
 
 (defsubst pcmpl-git-branches ()
   (pcomplete-uniqify-list
@@ -181,6 +168,8 @@ is called when point is at the end of REGEXP."
       (while (pcomplete-here (pcomplete-dirs-or-entries))))
      ((string= cmd "branch")
       (pcomplete-here (pcmpl-git-branches)))
+     ((string= cmd "config")
+      (pcomplete-here pcmpl-git-config-varialbes))
      ((string= cmd "help")
       (pcomplete-here pcmpl-git-commands))
      ((string= cmd "init")
