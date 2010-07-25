@@ -91,7 +91,7 @@ Normally it is the 'Documentation' direcotry under top-level git source.")
                   (push (match-string 1) short-options)))
               ;; parse long options
               (goto-char (point-min))
-              (while (re-search-forward "^\\(--[^[ \t\n=]+\\).*?::" nil t)
+              (while (re-search-forward "^\\(--[^[ \t\n=]+=?\\).*?::" nil t)
                 (push (match-string 1) long-options))
               ;; it seems all commands support --help
               (pushnew "--help" long-options :test #'equal)

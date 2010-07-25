@@ -162,6 +162,7 @@ If INTERNAL is non-nil, also include internal commands."
 ;;;###autoload
 (defun pcomplete/git ()
   "Completion rules for the `git' command."
+  (add-to-list 'pcomplete-suffix-list ?=)
   (let (cmd soptions loptions)
     (while (pcomplete-match "^-" 0)
       (pcomplete-here* pcmpl-git-toplevel-options))
