@@ -169,6 +169,10 @@ If INTERNAL is non-nil, also include internal commands."
     (pcomplete-here* (append (pcmpl-git-aliases) pcmpl-git-commands))
     ;; `pcomplete-arg' seems broken; see bug #6027
     (setq cmd (nth (1- pcomplete-index) pcomplete-args))
+    (unless (member cmd pcmpl-git-commands)
+      (setq cmd (car (split-string (shell-command-to-string
+                                    (concat "git config --get alias." cmd))
+                                   nil t))))
     (setq soptions (pcmpl-git-short-options cmd)
           loptions (pcmpl-git-long-options cmd))
     (while (pcomplete-match "^-" 0)
