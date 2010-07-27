@@ -20,7 +20,11 @@
 
 ;;; Commentary:
 
-;; 
+;; Complete both git commands and their options and arguments. Type
+;; '-' to complete short options and '--' to complete long options.
+;; For commands that accept commit as argument, branches and tags will
+;; be tried first and then the sha1's in the first few hundred
+;; commits.
 
 ;;; Code:
 
@@ -127,9 +131,8 @@ If INTERNAL is non-nil, also include internal commands."
   (pcomplete-uniqify-list
    (pcmpl-git-parse "tag" "^\\(\\S-+\\)$" nil "-l")))
 
-;;; xxx: decide how to use this
 (defsubst pcmpl-git-rev-list ()
-  (pcmpl-git-parse "rev-list" "^\\(\\S-+\\)$" nil "--all" "--max-count=300"))
+  (pcmpl-git-parse "rev-list" "^\\(\\S-+\\)$" nil "--all" "--abbrev-commit" "--max-count=300"))
 
 (defsubst pcmpl-git-branches-or-tags ()
   (append (pcmpl-git-branches) (pcmpl-git-tags)))
@@ -147,6 +150,11 @@ If INTERNAL is non-nil, also include internal commands."
     "--work-tree="                      ;xxx: pcomplete-suffix-list
     "--bare"
     "--no-replace-objects"))
+
+(defsubst pcmpl-git-complete-commit ()
+  (if (try-completion (pcomplete-arg) (pcmpl-git-branches-or-tags))
+      (pcomplete-here (pcmpl-git-branches-or-tags))
+    (pcomplete-here (pcmpl-git-rev-list))))
 
 ;;;###autoload
 (defun pcomplete/git ()
@@ -168,26 +176,36 @@ If INTERNAL is non-nil, also include internal commands."
       (while (pcomplete-here (pcomplete-dirs-or-entries))))
      ((string= cmd "branch")
       (pcomplete-here (pcmpl-git-branches)))
+     ((string= cmd "checkout")
+      (pcmpl-git-complete-commit)
+      (pcomplete-here (pcomplete-dirs-or-entries)))
+     ((string= cmd "cherry")
+      (pcomplete-here (pcmpl-git-branches)))
+     ((string= cmd "cherry-pick")
+      (pcmpl-git-complete-commit))
      ((string= cmd "config")
       (pcomplete-here pcmpl-git-config-varialbes))
+     ((string= cmd "format-patch")
+      (while (pcmpl-git-complete-commit)))
      ((string= cmd "help")
       (pcomplete-here pcmpl-git-commands))
      ((string= cmd "init")
       (pcomplete-here (pcomplete-dirs)))
      ((string= cmd "log")
       (pcomplete-here (pcomplete-entries)))
+     ((member cmd '("merge" "merge-base"))
+      (while (pcmpl-git-complete-commit)))
      ((member cmd '("rm" "mv"))
       (while (pcomplete-here (pcomplete-entries))))
+     ((string= cmd "name-rev")
+      (pcmpl-git-complete-commit))
      ((string= cmd "rev-list")
       (while (pcomplete-here (pcmpl-git-branches-or-tags))))
      ((string= cmd "rebase")
-      (while (pcomplete-here (pcmpl-git-branches-or-tags))))
+      (while (pcmpl-git-complete-commit)))
      ((string= cmd "tag")
-      (if (try-completion (pcomplete-arg) (pcmpl-git-branches-or-tags))
-          (pcomplete-here (pcmpl-git-branches-or-tags))
-        (pcomplete-here (pcmpl-git-rev-list))))
-     (t
-      (while (pcomplete-here (pcomplete-entries)))))))
+      (pcmpl-git-complete-commit))
+     (t (while (pcomplete-here (pcomplete-entries)))))))
 
 (provide 'pcmpl-git)
 ;;; pcmpl-git.el ends here
