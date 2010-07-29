@@ -73,7 +73,7 @@ and the return value."
         (when (or (null predicate)
                   (save-match-data (funcall predicate)))
           (push (match-string 1) collection)))
-      collection)))
+      (nreverse collection))))
 
 (defun pcmpl-git-parse (cmd regexp &optional predicate &rest args)
   "Parse the output of 'git CMD ARGS'.
@@ -97,9 +97,23 @@ is called when point is at the end of REGEXP."
       (if (or (= c1 ?-) (= c2 ?-)) (setq res (- res))))
     (if (> res 0) nil t)))
 
+(defun pcmpl-git-porcelain-commands ()
+  (let (beg end)
+    (with-temp-buffer
+      (call-process pcmpl-git-executable nil t)
+      (goto-char (point-min))
+      (when (re-search-forward "^$" nil t)
+        (forward-line 2)
+        (setq beg (point)))
+      (when (re-search-forward "^$" nil t)
+        (setq end (point)))
+      (when (and beg end)
+        (pcmpl-git-parse-region beg end "^[ ]\\{3\\}\\(\\S-+?\\)\\s-")))))
+
 (defun pcmpl-git-commands (&optional internal)
   "Return a collection of all 'git' commands.
-If INTERNAL is non-nil, also include internal commands."
+Porcelain commands are sorted first. If INTERNAL is non-nil, also
+include internal commands."
   (let (beg end commands)
     (with-temp-buffer
       (call-process pcmpl-git-executable nil t nil "help" "--all")
@@ -114,10 +128,12 @@ If INTERNAL is non-nil, also include internal commands."
       (when (and beg end)
         (setq commands (pcmpl-git-parse-region
                         beg end
-                        "\\s-\\(\\S-+\\)\\s-"
+                        "\\s-\\(\\S-+?\\)\\s-"
                         (unless internal
                           (lambda () (not (string-match "--" (match-string 1)))))))
-        (sort commands 'pcmpl-git-string-lessp)))))
+        (delete-dups
+         (append (pcmpl-git-porcelain-commands)
+                 (sort commands 'pcmpl-git-string-lessp)))))))
 
 (defvar pcmpl-git-commands (pcmpl-git-commands)
   "A collection of all 'git' commands.")
