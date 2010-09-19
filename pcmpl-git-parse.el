@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2010  Leo Shidai Liu
 
-;; Author: Shidai Liu <shidai.liu@gmail.com>
+;; Author: Leo <sdl.web@gmail.com>
 ;; Keywords: tools, data
 
 ;; This program is free software; you can redistribute it and/or modify

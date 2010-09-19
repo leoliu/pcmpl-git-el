@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2010  Leo Shidai Liu
 
-;; Author: Leo Shidai Liu <shidai.liu@gmail.com>
+;; Author: Leo <sdl.web@gmail.com>
 ;; Keywords: tools
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -228,7 +228,7 @@ include internal commands."
       (while (pcmpl-git-complete-commit)))
      ((string= cmd "tag")
       (pcmpl-git-complete-commit))
-     ;; rm, mv, add
+     ;; rm, mv, add...
      (t (while (pcomplete-here (pcomplete-entries)))))))
 
 (provide 'pcmpl-git)
