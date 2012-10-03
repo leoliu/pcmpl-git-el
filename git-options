@@ -44,6 +44,9 @@
                "pull"
                ("qvnsXrafkptu"
                 ("--quiet" "--verbose" "--commit" "--no-commit" "--edit" "--no-edit" "--ff" "--no-ff" "--ff-only" "--log" "--no-log" "--stat" "--no-stat" "--squash" "--no-squash" "--strategy=" "--strategy-option=" "--summary" "--no-summary" "--progress" "--no-progress" "--rebase" "--no-rebase" "--all" "--append" "--depth=" "--dry-run" "--force" "--keep" "--multiple" "--prune" "--no-tags" "--tags" "--recurse-submodules" "--no-recurse-submodules" "--submodule-prefix=" "--recurse-submodules-default=" "--update-head-ok" "--upload-pack" "--help"))
+               "push"
+               ("nfuqv"
+                ("--all" "--prune" "--mirror" "--dry-run" "--porcelain" "--delete" "--tags" "--receive-pack=" "--exec=" "--force" "--repo=" "--set-upstream" "--thin" "--no-thin" "--quiet" "--verbose" "--progress" "--recurse-submodules=" "--help"))
                "rebase"
                ("msXqvnCfipx"
                 ("--onto" "--continue" "--abort" "--keep-empty" "--skip" "--edit-todo" "--merge" "--strategy=" "--strategy-option=" "--quiet" "--verbose" "--stat" "--no-stat" "--no-verify" "--verify" "--force-rebase" "--ignore-whitespace" "--whitespace=" "--committer-date-is-author-date" "--ignore-date" "--interactive" "--preserve-merges" "--exec" "--root" "--autosquash" "--no-autosquash" "--no-ff" "--help"))

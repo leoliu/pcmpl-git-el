@@ -67,7 +67,8 @@ Normally it is the 'Documentation' direcotry under top-level git source.")
         (when (file-exists-p doc)
           (with-temp-buffer
             (insert-file-contents doc)
-            (when (re-search-forward "^OPTIONS\n-------" nil t)
+            ;; git-push.txt has OPTIONS[[OPTIONS]]
+            (when (re-search-forward "^OPTIONS.*\n-------" nil t)
               (setq beg (point)))
             (setq end (point-max))      ; defaults to eob
             (when (re-search-forward "^[A-Z]+?\n-+\n" nil t)
