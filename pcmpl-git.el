@@ -1,9 +1,10 @@
 ;;; pcmpl-git.el --- pcomplete for git
 
-;; Copyright (C) 2010  Leo Shidai Liu
+;; Copyright (C) 2010-2012  Leo Liu
 
-;; Author: Leo <sdl.web@gmail.com>
+;; Author: Leo Liu <sdl.web@gmail.com>
 ;; Keywords: tools
+;; Version: 0.5
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -97,7 +98,10 @@ is called when point is at the end of REGEXP."
       (if (or (= c1 ?-) (= c2 ?-)) (setq res (- res))))
     (if (> res 0) nil t)))
 
+;; There are far more porcelain commands than here. See `man git' for
+;; a full list.
 (defun pcmpl-git-porcelain-commands ()
+  "Actually returns the most commonly used porcelain commands."
   (let (beg end)
     (with-temp-buffer
       (call-process pcmpl-git-executable nil t)
@@ -154,19 +158,23 @@ include internal commands."
 (defsubst pcmpl-git-branches-or-tags ()
   (append (pcmpl-git-branches) (pcmpl-git-tags)))
 
-;;; Copy from 'git help git' in 1.7.0.4
+;;; From 'git --help' of version 1.7.12.2
 (defvar pcmpl-git-toplevel-options
   '("--version"
-    "--help"
     "--exec-path"
     "--html-path"
+    "--man-path"
+    "--info-path"
     "-p"
     "--paginate"
     "--no-pager"
-    "--git-dir="
-    "--work-tree="                      ;xxx: pcomplete-suffix-list
+    "--no-replace-objects"
     "--bare"
-    "--no-replace-objects"))
+    "--git-dir="
+    "--work-tree="
+    "--namespace="
+    "-c"
+    "--help"))
 
 (defsubst pcmpl-git-complete-commit ()
   (if (try-completion (pcomplete-arg) (pcmpl-git-branches-or-tags))
@@ -176,7 +184,6 @@ include internal commands."
 ;;;###autoload
 (defun pcomplete/git ()
   "Completion rules for the `git' command."
-  (add-to-list 'pcomplete-suffix-list ?=)
   (let (cmd soptions loptions)
     (while (pcomplete-match "^-" 0)
       (pcomplete-here* pcmpl-git-toplevel-options))
@@ -207,7 +214,7 @@ include internal commands."
      ((string= cmd "cherry")
       (pcomplete-here (pcmpl-git-branches)))
      ((string= cmd "cherry-pick")
-      (pcmpl-git-complete-commit))
+      (while (pcmpl-git-complete-commit)))
      ((string= cmd "config")
       (pcomplete-here pcmpl-git-config-varialbes))
      ((string= cmd "format-patch")
@@ -217,7 +224,7 @@ include internal commands."
      ((string= cmd "init")
       (pcomplete-here (pcomplete-dirs)))
      ((string= cmd "log")
-      (pcomplete-here (pcomplete-entries)))
+      (while (pcmpl-git-complete-commit)))
      ((string= cmd "name-rev")
       (pcmpl-git-complete-commit))
      ((string= cmd "rev-list")

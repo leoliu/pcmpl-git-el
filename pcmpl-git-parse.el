@@ -1,9 +1,10 @@
 ;;; pcmpl-git-parse.el --- Parsing Git Documentation for Completion
 
-;; Copyright (C) 2010  Leo Shidai Liu
+;; Copyright (C) 2010-2012  Leo Liu
 
-;; Author: Leo <sdl.web@gmail.com>
+;; Author: Leo Liu <sdl.web@gmail.com>
 ;; Keywords: tools, data
+;; Version: 0.5
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -55,8 +56,7 @@ Normally it is the 'Documentation' direcotry under top-level git source.")
     (nreverse variables)))
 
 (defvar git-parse-fixes
-  '(("diff" "--cached" "--staged")
-    ("rebase" "--onto")))
+  '(("diff" "--cached" "--staged")))
 
 (defun git-parse ()
   (let ((tbl (make-hash-table :size 149 :test #'equal)))
@@ -85,7 +85,7 @@ Normally it is the 'Documentation' direcotry under top-level git source.")
                   (insert-file-contents include)))
               ;; parse short options
               (goto-char (point-min))
-              (while (re-search-forward "^-\\([^-]\\).*?::" nil t)
+              (while (re-search-forward "^-\\([^- \t]\\).*?::" nil t)
                 ;; some options might look like this '-<n>' or '-[ABC]'
                 (unless (member (match-string 1) '("<" "["))
                   (push (match-string 1) short-options)))
