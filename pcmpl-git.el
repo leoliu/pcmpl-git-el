@@ -118,12 +118,10 @@ include internal commands."
     (with-temp-buffer
       (call-process pcmpl-git-executable nil t nil "help" "--all")
       (goto-char (point-min))
-      (when (search-forward "----------------" nil t)
-        (forward-line 1)
+      (when (or (re-search-forward "-+\n" nil t) ; older git
+                (search-forward "\n\n" nil t 2))
         (setq beg (point)))
-      (goto-char (point-max))
-      (forward-line -1)
-      (when (re-search-backward "^$" nil t)
+      (when (search-forward "\n\n" nil t)
         (setq end (point)))
       (when (and beg end)
         (setq commands (pcmpl-git-parse-region
