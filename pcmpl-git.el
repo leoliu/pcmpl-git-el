@@ -45,14 +45,14 @@
 (defvar pcmpl-git-hashtable nil
   "Hashtable containing GIT options read from `pcmpl-git-options-file'.")
 
-(defvar pcmpl-git-config-varialbes nil
+(defvar pcmpl-git-config-variables nil
   "A list containing git config variables.")
 
 (when (file-exists-p pcmpl-git-options-file)
   (with-temp-buffer
     (insert-file-contents pcmpl-git-options-file)
     (setq pcmpl-git-hashtable (read (current-buffer)))
-    (setq pcmpl-git-config-varialbes (read (current-buffer)))))
+    (setq pcmpl-git-config-variables (read (current-buffer)))))
 
 (defsubst pcmpl-git-short-options (cmd)
   (when (hash-table-p pcmpl-git-hashtable)
@@ -216,7 +216,7 @@ include internal commands."
      ((string= cmd "cherry-pick")
       (while (pcmpl-git-complete-commit)))
      ((string= cmd "config")
-      (pcomplete-here pcmpl-git-config-varialbes))
+      (pcomplete-here pcmpl-git-config-variables))
      ((string= cmd "format-patch")
       (while (pcmpl-git-complete-commit)))
      ((string= cmd "help")
