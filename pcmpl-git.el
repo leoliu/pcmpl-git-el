@@ -36,8 +36,14 @@
   :type 'file
   :group 'pcomplete)
 
+(defcustom pcmpl-git-data-directory
+  (file-name-directory load-file-name)
+  "Default directory used for locating the `pcmpl-git-options-file'."
+  :type 'directory
+  :group 'pcomplete)
+
 (defcustom pcmpl-git-options-file
-  (expand-file-name "git-options" data-directory)
+  (expand-file-name "git-options" pcmpl-git-data-directory)
   "File containing a hashtable with git options."
   :type 'file
   :group 'pcomplete)
