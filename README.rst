@@ -8,9 +8,10 @@ used (mainly shell/eshell).
 install
 -------
 
-Place file ``pcmpl-git.el`` in ``load-path`` and ``git-options`` in
-``data-directory`` by default. You can put file ``git-options``
-anywhere and customise ``pcmpl-git-options-file`` to point to it.
+Place files ``pcmpl-git.el`` and ``git-options`` in ``load-path``.
+By default, ``git-options`` will be looked for in the same directory
+as ``pcmpl-git.el``. You can put the file ``git-options`` anywhere
+and customise ``pcmpl-git-options-file`` to point to it.
 
 File ``pcmpl-git-parse.el`` is not needed for running this package. It
 is used for generating ``git-options``.
