@@ -1,6 +1,6 @@
 ;;; pcmpl-git.el --- pcomplete for git
 
-;; Copyright (C) 2010-2012  Leo Liu
+;; Copyright (C) 2010-2014  Leo Liu
 
 ;; Author: Leo Liu <sdl.web@gmail.com>
 ;; Keywords: tools

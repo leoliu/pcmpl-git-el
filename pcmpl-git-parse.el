@@ -1,6 +1,6 @@
 ;;; pcmpl-git-parse.el --- Parsing Git Documentation for Completion
 
-;; Copyright (C) 2010-2012  Leo Liu
+;; Copyright (C) 2010-2014  Leo Liu
 
 ;; Author: Leo Liu <sdl.web@gmail.com>
 ;; Keywords: tools, data
