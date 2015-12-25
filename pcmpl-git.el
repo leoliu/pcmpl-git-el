@@ -192,7 +192,10 @@ include internal commands."
   "Completion rules for the `git' command."
   (let (cmd soptions loptions)
     (while (pcomplete-match "^-" 0)
-      (pcomplete-here* pcmpl-git-toplevel-options))
+      (pcomplete-here* pcmpl-git-toplevel-options)
+      (when (string= "-c"
+                     (nth (1- pcomplete-index) pcomplete-args))
+        (pcomplete-here* (mapcar (lambda (s) (concat s "=")) pcmpl-git-config-variables))))
     (pcomplete-here* (append (pcmpl-git-aliases) pcmpl-git-commands))
     ;; `pcomplete-arg' seems broken; see bug #6027
     (setq cmd (nth (1- pcomplete-index) pcomplete-args))
