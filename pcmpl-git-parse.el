@@ -34,7 +34,7 @@
 Normally it is the 'Documentation' direcotry under top-level git source.")
 
 (defun git-parse-config ()
-  (let (variables (config (expand-file-name "config.txt" git-documentation-dir)))
+  (let (variables include (config (expand-file-name "config.txt" git-documentation-dir)))
     (when (file-exists-p config)
       (with-temp-buffer
         (insert-file-contents config)
