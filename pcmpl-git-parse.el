@@ -1,6 +1,6 @@
-;;; pcmpl-git-parse.el --- Parsing Git Documentation for Completion
+;;; pcmpl-git-parse.el --- Parsing Git Documentation for Completion  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2010-2014  Leo Liu
+;; Copyright (C) 2010-2017  Leo Liu
 
 ;; Author: Leo Liu <sdl.web@gmail.com>
 ;; Keywords: tools, data
@@ -26,7 +26,6 @@
 
 ;;; Code:
 
-(require 'cl)
 (require 'pcmpl-git)
 
 (defvar git-documentation-dir "Documentation"
@@ -95,7 +94,7 @@ Normally it is the 'Documentation' direcotry under top-level git source.")
               (while (re-search-forward "^\\(--[^[ \t\n=]+=?\\).*?::" nil t)
                 (push (match-string 1) long-options))
               ;; it seems all commands support --help
-              (pushnew "--help" long-options :test #'equal)
+              (cl-pushnew "--help" long-options :test #'equal)
               ;; add missing options from git-parse-fixes
               (setq long-options (append long-options (cdr (assoc cmd git-parse-fixes))))
               (puthash cmd (list (mapconcat 'identity (delete-dups
@@ -106,7 +105,7 @@ Normally it is the 'Documentation' direcotry under top-level git source.")
 
 (defun git-parse-and-save ()
   (interactive)
-  (assert (featurep 'hashtable-print-readable))
+  (cl-assert (featurep 'hashtable-print-readable))
   (setq-default indent-tabs-mode nil)
   (with-temp-buffer
     (insert ";;; -*- Emacs-Lisp -*-\n")

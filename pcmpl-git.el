@@ -1,6 +1,6 @@
-;;; pcmpl-git.el --- pcomplete for git
+;;; pcmpl-git.el --- pcomplete for git  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2010-2014  Leo Liu
+;; Copyright (C) 2010-2017  Leo Liu
 
 ;; Author: Leo Liu <sdl.web@gmail.com>
 ;; Keywords: tools
@@ -238,7 +238,7 @@ include internal commands."
       (pcmpl-git-complete-commit))
      ((string= cmd "rev-list")
       (while (pcomplete-here (pcmpl-git-branches-or-tags))))
-     ((member cmd '("diff" "merge" "merge-base" "rebase" "show"))
+     ((member cmd '("diff" "difftool" "merge" "merge-base" "rebase" "show"))
       (while (pcmpl-git-complete-commit)))
      ((string= cmd "tag")
       (pcmpl-git-complete-commit))
